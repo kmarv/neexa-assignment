@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in when app loads
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("user") || null;
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user"); // Clear user from localStorage
+    localStorage.removeItem("token");
   };
 
   return (

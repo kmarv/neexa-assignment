@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { loginApi } from "../../api/authApi";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
 
 const Login = () => {
@@ -76,6 +76,8 @@ setLoading(true);
       toast.success(response.message);
       setSuccess(response.message);
       setLoading(false);
+      console.log(response);
+      localStorage.setItem("token", response.access_token);
       navigate("/home");
     } catch (err) {
       console.log(err)
@@ -153,6 +155,15 @@ setLoading(true);
             {loading ? "Loading..." : "Login"}
           </button>
         </form>
+        <div className="text-center">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-emerald-700 hover:text-emerald-500"
+          >
+            Register
+          </Link>
+        </div>
         <ToastContainer />
       </div>
     </div>

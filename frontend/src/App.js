@@ -3,6 +3,7 @@ import logo from "./logo.svg";
 import "./App.css";
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastContainer } from "react-toastify";
 
 class App extends Component {
   render() {
@@ -11,6 +12,7 @@ class App extends Component {
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
+        <ToastContainer />
       </div>
     );
   }

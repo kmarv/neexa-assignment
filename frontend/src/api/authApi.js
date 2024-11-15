@@ -33,3 +33,12 @@ export const roles = async () => {
     throw error.response.data;
   }
 }
+
+export const logoutApi = async () => {
+  try {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}

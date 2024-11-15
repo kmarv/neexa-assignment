@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   FaBars,
   FaUserCircle,
@@ -6,10 +6,18 @@ import {
   FaCog,
   FaHome,
 } from "react-icons/fa";
+import { useLocation, Link } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext";
+import {  logoutApi } from "../../api/authApi";
+import { toast } from "react-toastify";
+import useRole from "../../hooks/useRole";
 
 const Layout = ({ children }) => {
+  const { user, logout } = useContext(AuthContext);
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const isAdmin = useRole("Admin")
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -19,6 +27,24 @@ const Layout = ({ children }) => {
     setProfileOpen(!profileOpen);
   };
 
+  // Function to map current route to the title
+  const getPageTitle = () => {
+    switch (location.pathname) {
+      case "/leads":
+        return "Leads";
+      case "/profile":
+        return "Profile";
+      case "/settings":
+        return "Settings";
+      default:
+        return "MyApp";
+    }
+  };
+
+  const handleLogout = async() => {
+    await logoutApi();
+    logout();
+  }
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Side bar */}
@@ -36,20 +62,24 @@ const Layout = ({ children }) => {
         <nav className="mt-6">
           <ul className="space-y-2">
             <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
-              <FaHome className="mr-3 group-hover:text-emerald-400" />
-              <span className="group-hover:text-emerald-400">Leads</span>
+              <Link to="/leads" className="flex items-center">
+                <FaHome className="mr-3 group-hover:text-emerald-400" />
+                <span className="group-hover:text-emerald-400">Leads</span>{" "}
+              </Link>
             </li>
             <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
+            <Link to="/followups" className="flex items-center">
               <FaUserCircle className="mr-3 group-hover:text-emerald-400" />
               <span className="group-hover:text-emerald-400">Follow Ups</span>
+            </Link>
             </li>
-            <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
+           {isAdmin && <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
               <FaCog className="mr-3 group-hover:text-emerald-400" />
               <span className="group-hover:text-emerald-400">Settings</span>
-            </li>
+            </li>}
             <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
               <FaSignOutAlt className="mr-3 group-hover:text-emerald-400" />
-              <span className="group-hover:text-emerald-400">Logout</span>
+              <span onClick={handleLogout} className="group-hover:text-emerald-400">Logout</span>
             </li>
           </ul>
         </nav>
@@ -62,7 +92,9 @@ const Layout = ({ children }) => {
           <button className="md:hidden text-gray-600" onClick={toggleSidebar}>
             <FaBars />
           </button>
-          <div className="text-xl font-semibold text-gray-700">Dashboard</div>
+          <div className="text-xl font-semibold text-gray-700">
+            {getPageTitle()} {/* Dynamically set the page title */}
+          </div>
           <div className="relative">
             <FaUserCircle
               className="text-3xl text-gray-600 cursor-pointer hover:text-emerald-500 transition-colors duration-200"
