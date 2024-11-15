@@ -42,7 +42,7 @@ const Layout = ({ children }) => {
   };
 
   const handleLogout = async() => {
-    await logoutApi();
+    // await logoutApi();
     logout();
   }
   return (
@@ -68,18 +68,27 @@ const Layout = ({ children }) => {
               </Link>
             </li>
             <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
-            <Link to="/followups" className="flex items-center">
-              <FaUserCircle className="mr-3 group-hover:text-emerald-400" />
-              <span className="group-hover:text-emerald-400">Follow Ups</span>
-            </Link>
+              <Link to="/followups" className="flex items-center">
+                <FaUserCircle className="mr-3 group-hover:text-emerald-400" />
+                <span className="group-hover:text-emerald-400">Follow Ups</span>
+              </Link>
             </li>
-           {isAdmin && <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
-              <FaCog className="mr-3 group-hover:text-emerald-400" />
-              <span className="group-hover:text-emerald-400">Settings</span>
-            </li>}
+            {isAdmin && (
+              <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
+                <Link to='/settings' className="flex items-center">
+                  <FaCog className="mr-3 group-hover:text-emerald-400" />
+                  <span className="group-hover:text-emerald-400">Settings</span>
+                </Link>
+              </li>
+            )}
             <li className="group flex items-center px-4 py-3 hover:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer">
               <FaSignOutAlt className="mr-3 group-hover:text-emerald-400" />
-              <span onClick={handleLogout} className="group-hover:text-emerald-400">Logout</span>
+              <span
+                onClick={handleLogout}
+                className="group-hover:text-emerald-400"
+              >
+                Logout
+              </span>
             </li>
           </ul>
         </nav>

@@ -25,7 +25,7 @@ export const loginApi = async (credentials) => {
   }
 };
 
-export const roles = async () => {
+export const rolesApi = async () => {
   try {
     const response = await api.get("/auth/roles");
     return response.data;
@@ -40,5 +40,33 @@ export const logoutApi = async () => {
     return response.data;
   } catch (error) {
     throw error.response.data;
+  }
+}
+
+export const getUsers = async () => {
+  try {
+    const response = await api.get("/users");
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+export const deleteUserApi = async (id) => {
+  try {
+    const response = await api.delete(`/users/${id}/delete`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+export const assignRoleToUserApi = async (id, role)=>{
+  try {
+    const response = await api.post(`users/${id}/assign-role`, role)
+    return response.data
+  } catch (error) {
+    throw error.response.data;
+    
   }
 }

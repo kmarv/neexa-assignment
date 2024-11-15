@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { register, roles } from "../../api/authApi";
+import { register, rolesApi } from "../../api/authApi";
 import { toast, ToastContainer } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -28,7 +28,7 @@ const Register = () => {
   const getRoles = async () => {
     setLoading(true);
     try {
-      const response = await roles();
+      const response = await rolesApi();
       setLoading(false);
       setUserRoles(response.data.roles);
     } catch (error) {

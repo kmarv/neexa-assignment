@@ -9,22 +9,30 @@ import Register from "../pages/register/Register";
 import { AuthContext } from "../contexts/AuthContext";
 import Leads from "../pages/leads";
 import Followups from "../pages/followups";
+import Settings from "../pages/settings";
+import RegisterUser from "../components/users/RegisterUsers";
 
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
+
+  const renderRoute = (path, component, redirectPath = "/") => (
+    <Route
+      path={path}
+      element={user ? component : <Navigate to={redirectPath} />}
+    />
+  );
+
   return (
     <Router>
       <Routes>
-        <Route path="/home" element={user ? <Home /> : <Navigate to="/" />} />
+        {renderRoute("/home", <Home />)}
         <Route path="/" element={!user ? <Login /> : <Navigate to="/home" />} />
-
-        <Route
-          path="/register"
-          element={!user ? <Register /> : <Navigate to="/home" />}
-        />
+        <Route path="/register" element={!user ? <Register /> : <Navigate to="/home" />} />
+        {renderRoute("/leads", <Leads />)}
+        {renderRoute("/followups", <Followups />)}
+        {renderRoute("/settings", <Settings />)}
+        {renderRoute("/register-users", <RegisterUser/>)}
         <Route path="*" element={<h1>404 Not Found</h1>} />
-        <Route path="/leads" element={user ? <Leads /> : <Navigate to="/" />} />
-        <Route path="/followups" element={user ? <Followups /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
