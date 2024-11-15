@@ -168,7 +168,7 @@ class AuthController extends Controller
     }
 
 
-    function getRoles()
+    public function getRoles()
     {
         $roles = Role::all();
         return response()->json([
@@ -179,4 +179,6 @@ class AuthController extends Controller
             ],
         ], 200);
     }
+
+   
 }

@@ -35,6 +35,7 @@ Route::group(
         Route::post('refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
         Route::post('me', [AuthController::class, 'me'])->middleware('auth:api');
         Route::get('roles', [AuthController::class, 'getRoles']);
+       
     }
 );
 
@@ -43,6 +44,9 @@ Route::group([
     'middleware' => ['auth:api', 'permission:manage users']
 ], function () {
     Route::post('register', [UserController::class, 'registerUser']);
+    Route::get('/', [UserController::class, 'getUsers']);
+    Route::delete('/{id}/delete', [UserController::class, 'deleteUser']);
+    Route::post('/{id}/assign-role', [UserController::class, 'assignRole']);
 });
 
 Route::middleware('auth:api')->prefix('followups')->group(function () {
