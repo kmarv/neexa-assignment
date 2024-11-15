@@ -5,23 +5,23 @@ import React, { useContext } from "react";
 
 import Home from "../pages/Home/Home";
 import Login from "../pages/login/Login";
-import Register from "../pages/register/register";
+import Register from "../pages/register/Register";
 import { AuthContext } from "../contexts/AuthContext";
 
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
-
+console.log(user);
   return (
     <Router>
       <Routes>
-        <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/home" element={user ? <Home /> : <Navigate to="/" />} />
         <Route
-          path="/login"
-          element={!user ? <Login /> : <Navigate to="/" />}
+          path="/"
+          element={!user ? <Login /> : <Navigate to="/home" />}
         />
         <Route
           path="/register"
-          element={!user ? <Register /> : <Navigate to="/" />}
+          element={!user ? <Register /> : <Navigate to="/home" />}
         />
       </Routes>
     </Router>

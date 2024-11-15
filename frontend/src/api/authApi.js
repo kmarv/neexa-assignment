@@ -3,7 +3,7 @@ import api from "./api";
 // Register user
 export const register = async (userData) => {
   try {
-    const response = await api.post('/register', userData);
+    const response = await api.post('/auth/register', userData);
     return response.data;
   } catch (error) {
     throw error.response.data;
@@ -12,9 +12,9 @@ export const register = async (userData) => {
 
 
 // Login user
-export const login = async (credentials) => {
+export const loginApi = async (credentials) => {
   try {
-    const response = await api.post('/login', credentials);
+    const response = await api.post("/auth/login", credentials);
     const token = response.data.token; // Assuming your API returns a token
     if (token) {
       localStorage.setItem('token', token); // Store token in localStorage
@@ -24,3 +24,12 @@ export const login = async (credentials) => {
     throw error.response.data;
   }
 };
+
+export const roles = async () => {
+  try {
+    const response = await api.get("/auth/roles");
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
