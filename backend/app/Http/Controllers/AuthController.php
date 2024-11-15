@@ -100,7 +100,7 @@ class AuthController extends Controller
         try {
             // Attempt to authenticate the user
             if (! $token = auth()->attempt($credentials)) {
-                return response()->json(['error' => 'Unauthorized'], 401);  // Unauthorized if credentials are incorrect
+                return response()->json(['error' => 'Inavlid email or Password'], 401);  // Unauthorized if credentials are incorrect
             }
 
             // Return the token with user details
@@ -157,10 +157,24 @@ class AuthController extends Controller
         $user = auth()->user(); // Get the authenticated user data
 
         return response()->json([
+            'status' => 'success',
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60, // seconds
             'user' => $user,
         ]);
+    }
+
+
+    function getRoles()
+    {
+        $roles = Role::all();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Roles fetched successfully',
+            'data' => [
+                'roles' => $roles
+            ],
+        ], 200);
     }
 }

@@ -33,6 +33,7 @@ Route::group([
         Route::post('logout', [AuthController::class,'logout'])->middleware('auth:api');
         Route::post('refresh', [AuthController::class,'refresh'])->middleware('auth:api');
         Route::post('me', [AuthController::class,'me'])->middleware('auth:api');
+        Route::get('roles', [AuthController::class,'getRoles']);
     }
 );
 
