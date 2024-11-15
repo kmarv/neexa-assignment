@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('lead_id');
             $table->dateTime('scheduled_at');
             $table->enum('status', ['Pending', 'Completed', 'Missed'])->default('Pending');
+            $table->text('notes')->nullable();
             $table->timestamps();
 
             // Foreign key constraint

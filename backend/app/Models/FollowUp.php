@@ -13,6 +13,7 @@ class FollowUp extends Model
         'lead_id',
         'scheduled_at',
         'status',
+        'notes',
         'created_by',
         'updated_by'
     ];

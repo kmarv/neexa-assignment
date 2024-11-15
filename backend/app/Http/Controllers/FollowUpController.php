@@ -14,6 +14,25 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FollowUpController extends Controller
 {
+
+    public function index()
+    {
+        try {
+            // Get all follow-ups
+            $followUps = FollowUp::with('lead')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Follow-ups fetched successfully.',
+                'follow_ups' => $followUps,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while fetching follow-ups.',
+            ]);
+        }
+    }
     // Schedule a follow-up
     public function store(CreateFollowUpRequest $request)
     {
@@ -21,6 +40,7 @@ class FollowUpController extends Controller
             $followUp = FollowUp::create([
                 'lead_id' => $request->lead_id,
                 'scheduled_at' => $request->scheduled_at,
+                'notes' => $request->notes,
                 'status' => 'Pending',
             ]);
 
@@ -70,4 +90,20 @@ class FollowUpController extends Controller
         }
     }
 
+    public function reschedule(Request $request, $id)
+    {
+        try {
+            $followUp = FollowUp::findOrFail($id);
+            if ($followUp->status === "Completed") {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot reschedule completed folowup'
+                ]);
+            }
+            $followUp->update($request->validated());
+            return response()->json(['status' => 'success','message'=>'Reschedule Complete' , 'follow_up' => $followUp], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['status' => 'error', 'message' => 'Follow-up not found.'], 404);
+        }
+    }
 }

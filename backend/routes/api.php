@@ -23,37 +23,39 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::group([
-    'prefix' => 'auth'
-],
+Route::group(
+    [
+        'prefix' => 'auth'
+    ],
     function ($router) {
 
-        Route::post('register', [AuthController::class,'register']);
+        Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
-        Route::post('logout', [AuthController::class,'logout'])->middleware('auth:api');
-        Route::post('refresh', [AuthController::class,'refresh'])->middleware('auth:api');
-        Route::post('me', [AuthController::class,'me'])->middleware('auth:api');
-        Route::get('roles', [AuthController::class,'getRoles']);
+        Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
+        Route::post('refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
+        Route::post('me', [AuthController::class, 'me'])->middleware('auth:api');
+        Route::get('roles', [AuthController::class, 'getRoles']);
     }
 );
 
 Route::group([
-    'prefix'=>'users',
-    'middleware'=>['auth:api', 'permission:manage users']
-], function ()  {
+    'prefix' => 'users',
+    'middleware' => ['auth:api', 'permission:manage users']
+], function () {
     Route::post('register', [UserController::class, 'registerUser']);
-    
 });
 
 Route::middleware('auth:api')->prefix('followups')->group(function () {
     Route::post('/', [FollowUpController::class, 'store']);
+    Route::get('/', [FollowUpController::class, 'index']);
     Route::put('/{id}/status', [FollowUpController::class, 'updateStatus'])->middleware('permission:update followup status');
+    Route::put('/${id}/reschedule', [FollowUpController::class, 'reschedule']);
 });
 
-Route::group(['middleware' => ['auth:api'], 'prefix'=>'leads'], function () {
-    Route::get('/', [LeadController::class, 'index']);
-    Route::post('/', [LeadController::class, 'store']);
-    Route::put('/{id}/update', [LeadController::class, 'update']);
-    Route::put('/{id}/assign', [LeadController::class, 'assignTo']);
-    Route::delete('/{id}', [LeadController::class, 'destroy'])->middleware('permission:delete leads');
+Route::middleware('auth:api')->prefix('leads')->group(function () {
+    Route::get('/', [LeadController::class, 'index']);           // GET all leads
+    Route::post('/', [LeadController::class, 'store']);          // POST new lead
+    Route::put('/{id}', [LeadController::class, 'update']);      // PUT update a lead (standard RESTful route)
+    Route::put('/{id}/assign', [LeadController::class, 'assignTo']); // PUT assign a lead
+    Route::delete('/{id}', [LeadController::class, 'destroy'])->middleware('permission:delete leads'); // DELETE with permission middleware
 });

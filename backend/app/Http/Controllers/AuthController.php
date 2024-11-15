@@ -154,8 +154,10 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
-        $user = auth()->user(); // Get the authenticated user data
+        $user = auth()->user(); // Get the authenticated user
 
+        // Load the roles and permissions with the user
+        $user->load('roles.permissions');
         return response()->json([
             'status' => 'success',
             'access_token' => $token,

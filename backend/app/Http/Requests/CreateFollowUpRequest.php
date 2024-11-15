@@ -26,6 +26,7 @@ class CreateFollowUpRequest extends FormRequest
         return [
             'lead_id' => 'required|exists:leads,id', // Ensure the lead exists
             'scheduled_at' => 'required|date|after:now|unique:follow_ups,scheduled_at,NULL,id,lead_id,' . $this->lead_id, // Ensure follow-up is scheduled for the future, and the lead doesn't have a follow-up at the same time
+            'notes' => 'nullable|string',
         ];
     }
 
@@ -41,6 +42,7 @@ class CreateFollowUpRequest extends FormRequest
             'scheduled_at.date' => 'The scheduled date must be a valid datetime (e.g., 2024-11-14 15:00:00).',
             'scheduled_at.after' => 'The follow-up must be scheduled for a future date and time.',
             'scheduled_at.unique' => 'This lead already has a follow-up scheduled for the selected date and time.',
+            'notes.string' => 'Notes must be a string.',
         ];
     }
 

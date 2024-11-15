@@ -25,7 +25,7 @@ class UpdateLeadRequest extends FormRequest
     {
         return [
             'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:leads,email,' . $this->route('lead'),  // Allow the current email value
+            'email' => 'nullable|email|unique:leads,email,' . $this->route('id'),  // Allow the current email value
             'phone' => 'nullable|string|max:15',
         ];
     }
