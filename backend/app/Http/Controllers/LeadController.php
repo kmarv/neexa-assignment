@@ -24,9 +24,21 @@ class LeadController extends Controller
      */
     public function index()
     {
-        $leads = Lead::all();  // You can modify this to include role-based filtering
+        // Get the logged-in user
+        $user = auth()->user();
+
+        // If the user is neither an admin nor a sales rep, filter the leads by the 'created_by' field
+        if ($user->roles()->first()->name !== 'Admin' && $user->roles()->first()->name !== 'Sales Manager') {
+            // Get leads created by the logged-in user
+            $leads = Lead::where('created_by', $user->id)->get();
+        } else {
+            // Admin and sales rep can see all leads
+            $leads = Lead::all();
+        }
+
         return response()->json(['leads' => $leads], 200);
     }
+
 
 
     /**
