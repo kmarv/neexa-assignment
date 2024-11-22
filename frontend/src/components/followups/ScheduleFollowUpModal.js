@@ -18,7 +18,6 @@ const ScheduleFollowUpModal = ({ isOpen, onClose, selectedLead }) => {
       setLoading(false)
       return;
     }
-console.log(selectedLead)
     const followUpDetails = {
       scheduled_at: `${selectedDate} ${selectedTime}`,
       notes,

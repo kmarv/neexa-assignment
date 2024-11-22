@@ -1,61 +1,36 @@
-import React, { useState } from "react";
-import { FaEllipsisV } from "react-icons/fa";
-import { deleteLeadApi, updateLeadApi } from "../../api/leadsApi";
+import React, { useContext, useState } from "react";
+import { deleteLeadApi } from "../../api/leadsApi";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import { LuView } from "react-icons/lu";
 import ScheduleFollowUpModal from "../followups/ScheduleFollowUpModal";
+import useHasPermission from "../../hooks/useHasPermission";
+import { AuthContext } from "../../contexts/AuthContext";
+import UpdateLeadModal from "./UpdateLeadModal";
 
-const LeadsTable = ({
-  leads,
-  onFilter,
-  onAdd,
-  refresh,
-  setRefresh
-}) => {
+const LeadsTable = ({ leads, onFilter, onAdd, refresh, setRefresh }) => {
+  const { user } = useContext(AuthContext);
+  console.log(user.roles[0].name);
   const [modalOpen, setModalOpen] = useState(false); // To control modal visibility
   const [selectedLead, setSelectedLead] = useState(null); // Store selected lead for modal
-  const [updatedLead, setUpdatedLead] = useState(null); // Track form changes
-  const [isEditMode, setIsEditMode] = useState(false); // Track if in edit mode
   const [searchQuery, setSearchQuery] = useState("");
   const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
 
+  const canUserViewLeads = useHasPermission(user.roles[0], "view leads");
+  const canAddLeads = useHasPermission(user.roles[0], "create leads");
+  const canScheduleFollowUp = useHasPermission(
+    user.roles[0],
+    "schedule followups"
+  );
 
-  // Open modal with lead details
-  const openModal = (lead) => {
-    setSelectedLead(lead);
-    setUpdatedLead(lead); // Initialize the form with lead details
-    setIsEditMode(false); // Start in "view" mode
+  const openUpdateModal = (lead) => {
     setModalOpen(true);
+    setSelectedLead(lead);
   };
 
   // Close modal
   const closeModal = () => {
     setModalOpen(false);
     setSelectedLead(null);
-    setUpdatedLead(null); // Clear updatedLead when closing modal
-  };
-
-  // Handle form changes for editing
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUpdatedLead((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle form submission (update lead)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await updateLeadApi(selectedLead.id, updatedLead);
-      toast.success(response.message);
-      setRefresh(refresh);
-
-      setTimeout(() => {
-        closeModal(); // Close modal after updating
-      }, 1000);
-    } catch (error) {
-      toast.error(error.message || "Something went wrong, please try again.");
-    }
   };
 
   // Handle delete action
@@ -86,10 +61,8 @@ const LeadsTable = ({
 
   // Handle schedule follow-up action
   const handleScheduleFollowUp = (lead) => {
-    closeModal();
     openFollowUpModal();
     setSelectedLead(lead);
-
   };
 
   const handleSearch = (e) => {
@@ -116,24 +89,24 @@ const LeadsTable = ({
     setIsFollowUpModalOpen(false);
   };
 
-  
-
   return (
-    <div className="p-4">
+    <div className="p-4  max-w-screen overflow-x-hidden mx-auto">
       {/* Filter and Add Buttons */}
-      <div className="flex justify-evenly items-center mb-4">
-        <button
-          className="bg-white border border-emerald-500 text-emerald-500 hover:bg-gradient-to-r hover:from-emerald-400 hover:to-emerald-600 hover:text-white font-bold py-2 px-4 rounded"
-          onClick={onAdd}
-        >
-          Add Lead
-        </button>
+      <div className="flex justify-between items-center mb-4 space-y-2 sm:space-y-0">
+        {canAddLeads && (
+          <button
+            className="bg-white border border-emerald-500 text-emerald-500 hover:bg-gradient-to-r hover:from-emerald-400 hover:to-emerald-600 hover:text-white font-bold py-2 px-4 rounded"
+            onClick={onAdd}
+          >
+            Add Lead
+          </button>
+        )}
         <input
           type="text"
           placeholder="Search..."
           value={searchQuery}
           onChange={handleSearch}
-          className="bg-white text-blue-500   font-bold py-2 px-4 rounded border border-blue-500"
+          className="bg-white text-blue-500 font-bold py-2 px-4 rounded border border-blue-500 "
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               onFilter();
@@ -143,42 +116,80 @@ const LeadsTable = ({
       </div>
 
       {/* Leads Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white">
-            <tr>
-              <th className="py-2 px-4 text-left">Name</th>
-              <th className="py-2 px-4 text-left">Email</th>
-              <th className="py-2 px-4 text-left">Phone</th>
-              <th className="py-2 px-4 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeads && filteredLeads.length > 0 ? (
-              filteredLeads.map((lead, index) => (
-                <tr key={index} className="border-b hover:bg-gray-100">
-                  <td className="py-2 px-4">{lead.name}</td>
-                  <td className="py-2 px-4">{lead.email}</td>
-                  <td className="py-2 px-4">{lead.phone}</td>
-                  <td className="py-2 px-4">
-                    <span
-                      className="text-gray-700 hover:text-gray-900 focus:outline-none flex items-center"
-                      onClick={() => openModal(lead)} // Open modal with lead details
-                    >
-                      <LuView size={20} /> View
-                    </span>
+      <div className="relative overflow-auto shadow-md rounded-lg">
+        {canUserViewLeads && (
+          <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th scope="col" className="px-6 py-3">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Email
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Phone
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 sticky right-0 bg-gray-50 dark:bg-gray-700"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeads && filteredLeads.length > 0 ? (
+                filteredLeads.map((lead, index) => (
+                  <tr
+                    key={index}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100"
+                  >
+                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                      {lead.name}
+                    </td>
+                    <td className="px-6 py-4">{lead.email}</td>
+                    <td className="px-6 py-4">{lead.phone}</td>
+                    <td className="px-6 py-4 sticky right-0 bg-white dark:bg-gray-800">
+                      <div className="flex flex-col md:flex-row items-start md:items-center  gap-2">
+                        {lead.is_followup_scheduled ? (
+                          <span className="text-green-600">
+                            Followup Scheduled
+                          </span>
+                        ) : canScheduleFollowUp ? (
+                          <span
+                            className="text-blue-600 hover:underline cursor-pointer dark:text-blue-400 hover:border hover:border-blue-500 hover:bg-gradient-to-r hover:from-blue-500 hover:via-blue-700 hover:to-blue-900  font-bold  rounded "
+                            onClick={() => handleScheduleFollowUp(lead)}
+                          >
+                            <span className="absolute inset-0 bg-blue-200 opacity-50 rounded-full animate-pulse-indicator"></span>
+                            <span className="relative z-10">
+                              Schedule Followup
+                            </span>
+                          </span>
+                        ) : (
+                          "No action permiited"
+                        )}
+
+                        <span
+                          className=" text-red-600  text-left hover:underline cursor-pointer"
+                          onClick={() => openUpdateModal(lead)}
+                        >
+                          Update info
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center text-gray-500">
+                    No leads available
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="py-4 text-center">
-                  No leads available
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Schedule Follow-Up Modal */}
@@ -187,119 +198,15 @@ const LeadsTable = ({
         onClose={closeFollowUpModal}
         selectedLead={selectedLead}
       />
+      <UpdateLeadModal
+        open={modalOpen}
+        lead={selectedLead}
+        closeModal={closeModal}
+        refresh={refresh}
+        setRefresh={setRefresh}
+      />
 
       {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-600 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">
-              {isEditMode ? "Edit Lead" : "Lead Details"}
-            </h2>
-            {/* Display Lead Details or Form */}
-            {!isEditMode ? (
-              <>
-                <div className="mb-4">
-                  <p>
-                    <strong>Name:</strong> {selectedLead.name}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {selectedLead.email}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {selectedLead.phone}
-                  </p>
-                </div>
-                <div className="flex justify-between mt-4">
-                  <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                    onClick={() => setIsEditMode(true)} // Switch to edit mode
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                    onClick={handleDelete} // Delete action
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
-                    onClick={handleScheduleFollowUp(selectedLead)} // Schedule follow-up action
-                  >
-                    Schedule Follow-up
-                  </button>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <div className="mb-2">
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={updatedLead.name}
-                    onChange={handleInputChange}
-                    className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-                  />
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={updatedLead.email}
-                    onChange={handleInputChange}
-                    className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-                  />
-                </div>
-                <div className="mb-2">
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={updatedLead.phone}
-                    onChange={handleInputChange}
-                    className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-                  />
-                </div>
-                <div className="mt-4 flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={closeModal} // Close the modal without saving
-                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

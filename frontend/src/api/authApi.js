@@ -70,3 +70,40 @@ export const assignRoleToUserApi = async (id, role)=>{
     
   }
 }
+
+export const getStatistics = async () =>{
+  try {
+    const response = await api.get(`users/statistics`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+
+export const permissionsApi  = async () => { 
+  try {
+    const response = await api.get(`users/roles/permissions`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+export const updateRolePermissionApi = async ( data) => {
+  try {
+    const response = await api.post(`users/roles/permissions/update`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+export const checkNotificationsApi = async () => {
+  try {
+    const response = await api.get(`notifications/check`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}

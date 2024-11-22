@@ -3,6 +3,7 @@ import Layout from "../Home/Home";
 import { getleadsApi } from "../../api/leadsApi";
 import LeadsTable from "../../components/leads/LeadsTable";
 import LeadForm from "../../components/leads/LeadsForm";
+import Loader from "../../components/Loader";
 
 function Leads() {
   const [leads, setLeads] = useState([]);
@@ -52,7 +53,9 @@ function Leads() {
   return (
     <Layout>
       {loading ? (
-        <div>loading ....</div>
+        <div>
+          <Loader />
+        </div>
       ) : (
         <div className="sm:p-0   lg:p-6">
           {isAdding ? (

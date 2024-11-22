@@ -61,6 +61,7 @@ setLoading(true);
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      setLoading(false);
       return; // Stop submission if there are validation errors
     }
 
@@ -75,9 +76,8 @@ setLoading(true);
       login(response.user);
       toast.success(response.message);
       setSuccess(response.message);
-      setLoading(false);
-      console.log(response);
       localStorage.setItem("token", response.access_token);
+      setLoading(false);
       navigate("/home");
     } catch (err) {
       console.log(err)
@@ -152,7 +152,7 @@ setLoading(true);
             className="w-full py-2 px-4 bg-gradient-to-r from-emerald-700  via-emerald-500 to-emerald-700 text-white font-semibold rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
             disabled={loading}
           >
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Logging In..." : "Login"}
           </button>
         </form>
         <div className="text-center">

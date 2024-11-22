@@ -44,3 +44,32 @@ export const updateLeadApi = async (id, lead) => {
     throw error.response.data;
   }
 };
+
+export const fetchNotificationsApi = async () => {
+  try {
+    const response = await api.get("/notifications");
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
+export const markNotificationAsReadApi = async (notificationId) => {
+  try {
+    const response = await api.post(
+      `/notifications/${notificationId}/mark-as-read`
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
+export const markAllNotificationsAsReadApi = async () => {
+  try {
+    const response = await api.post(`/notifications/mark-all-as-read`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}

@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { getFollowupsApi } from "../../api/followUpApis";
 import Layout from "../Home/Home";
-import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import { toast } from "react-toastify";
 import FollowUpModal from "../../components/followups/FollowUpModal";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import Loader from "../../components/Loader";
+
+const localizer = momentLocalizer(moment);
 
 function Followups() {
   const [followups, setFollowups] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFollowUp, setSelectedFollowUp] = useState(null); // Track selected follow-up
-  const [showModal, setShowModal] = useState(false); // Track modal visibility
+  const [selectedFollowUp, setSelectedFollowUp] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const fetchFollowups = async () => {
     try {
       const response = await getFollowupsApi();
       setFollowups(response.follow_ups);
-      setLoading(false);
     } catch (error) {
+      toast.error("Failed to fetch follow-ups. Please try again.");
+    } finally {
       setLoading(false);
-      console.log(error);
     }
   };
 
@@ -27,94 +31,88 @@ function Followups() {
     fetchFollowups();
   }, []);
 
-  // Format the followup data for the calendar
-  const formattedEvents = followups?.map((followup) => ({
+  const formattedEvents = followups.map((followup) => ({
     id: followup.id,
-    title: `${followup.lead.name} - ${followup.notes}`, // Title includes lead name and notes
+    title: `${followup.lead.name} - Followup meeting`,
     start: moment(followup.scheduled_at).toDate(),
-    end: moment(followup.scheduled_at).add(1, "hour").toDate(), // Assuming each follow-up lasts an hour
-    description: followup.notes,
-    leadId: followup.lead.id,
+    end: moment(followup.scheduled_at).add(1, "hour").toDate(),
+    status: followup.status,
     leadDetails: followup.lead,
-    status: followup.status, // Include status for color coding
   }));
 
-  // Define color mapping based on the status
   const statusColorMapping = {
-   
-    Completed: "green", // Green for completed follow-ups
-    Missed: "red", // Red for missed follow-ups
+    Completed: "green",
+    Missed: "red",
+    Pending: "gray",
   };
 
-  // Handle modal close
-  const handleModalClose = () => {
-    setShowModal(false);
-    setSelectedFollowUp(null);
-  };
+ const eventStyleGetter = (event) => {
+   const baseStyle = {
+     backgroundColor: statusColorMapping[event.status] || "gray",
+     borderRadius: "5px",
+     color: "white",
+     position: "relative",
+   };
 
-  // Handle follow-up update
-  const handleFollowUpUpdate = async (updatedFollowUp) => {
-    try {
-      // Call API to update the follow-up (you need to implement updateFollowUpApi)
-      // const response = await updateFollowUpApi(updatedFollowUp.id, updatedFollowUp);
-      console.log("Updated follow-up: ", updatedFollowUp);
-      // Optionally update state here
-      fetchFollowups(); // Refresh the follow-ups after the update
-      handleModalClose();
-    } catch (error) {
-      console.log("Error updating follow-up: ", error);
-    }
-  };
+   if (event.status === "Pending" || event.status === "Missed") {
+     return {
+       style: {
+         ...baseStyle,
+       },
+       className: "relative",
+     };
+   }
 
-  
-  // Custom event styling based on status
-  const eventStyleGetter = (event) => {
-    const status = event.status || "Pending"; // Default to 'Pending' if no status
-    const color = statusColorMapping[status] || "gray"; // Default to gray if status not found
+   return {
+     style: baseStyle,
+   };
+ };
 
-    return {
-      style: {
-        backgroundColor: color, // Apply the color based on status
-        borderRadius: "5px",
-        color: "white", // Ensure the text is readable
-        opacity: 0.8, // Set opacity if needed
-      },
-    };
-  };
 
   return (
     <Layout>
       <div className="p-4">
         {loading ? (
-          <p>Loading...</p>
+          <p><Loader /></p>
         ) : (
-          <div style={{ height: 500 }}>
+          <div className="h-[500px]">
             <Calendar
-              localizer={momentLocalizer(moment)}
+              localizer={localizer}
               events={formattedEvents}
               startAccessor="start"
               endAccessor="end"
               style={{ height: "100%" }}
               onSelectEvent={(event) => {
-                setSelectedFollowUp(event); // Set selected follow-up
-                setShowModal(true); // Open modal
+                setSelectedFollowUp(event);
+                setShowModal(true);
               }}
-              onSelectSlot={(slotInfo) =>
-                alert(`Selected Slot: ${slotInfo.start}`)
-              }
-              eventPropGetter={eventStyleGetter} // Apply custom styling to events
+              eventPropGetter={eventStyleGetter}
+              components={{
+                event: ({ event }) => (
+                  <div className="flex items-center">
+                    {(event.status === "Pending" ||
+                      event.status === "Missed") && (
+                      <span
+                        className="absolute left-0 w-3 h-3 bg-yellow-400 rounded-full animate-pulse-indicator"
+                        style={{ marginRight: "0.5rem" }}
+                      ></span>
+                    )}
+                    <span>{event.title}</span>
+                  </div>
+                ),
+              }}
             />
           </div>
         )}
       </div>
 
-      {/* Modal for follow-up details */}
-      <FollowUpModal
-        showModal={showModal}
-        followup={selectedFollowUp}
-        onClose={handleModalClose}
-        onUpdate={handleFollowUpUpdate}
-      />
+      {showModal && (
+        <FollowUpModal
+          showModal={showModal}
+          followup={selectedFollowUp}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </Layout>
   );
 }
