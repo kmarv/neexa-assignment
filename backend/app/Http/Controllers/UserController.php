@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use App\Models\User;
+use App\Models\FollowUp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\RegisterUserRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
@@ -123,5 +128,153 @@ class UserController extends Controller
         ], 404);
     }
 
+    public function getStatistics()
+    {
+        // Get the logged-in user
+        $user = auth()->user();
+
+        // Check if the user has the 'Sale Rep' role
+        if ($user->roles()->first()->name === 'Sales Rep') {
+            // Get stats for the specific Sale Rep
+            $leadsCount = Lead::where('created_by', $user->id)->count();
+            $followUpsCount = FollowUp::where('created_by', $user->id)->count();
+            $followUps = FollowUp::where('created_by', $user->id)
+                ->selectRaw("
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending,
+                COUNT(CASE WHEN status = 'completed' THEN 1 END) AS completed,
+                COUNT(CASE WHEN status = 'missed' THEN 1 END) AS missed
+            ")
+                ->first();
+
+            return response()->json([
+                'leads_count' => $leadsCount,
+                'follow_ups_count' => $followUpsCount,
+                'follow_ups' => $followUps,
+            ]);
+        } elseif ($user->roles()->first()->name === 'Admin') {
+            // Stats for Admin
+            $salesRepsCount = User::whereHas('roles', function ($query) {
+                $query->where('name', 'Sales Rep');
+            })->count();
+
+            $salesManagersCount = User::whereHas('roles', function ($query) {
+                $query->where('name', 'Sales Manager');
+            })->count();
+
+            $totalLeads = Lead::count();
+            $totalFollowUps = FollowUp::count();
+            $leadsBySalesReps = Lead::select('created_by', DB::raw('COUNT(*) as total'))
+                ->groupBy('created_by')
+                ->get();
+
+            $followUpSummary = FollowUp::selectRaw("
+            COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) AS completed,
+            COUNT(CASE WHEN status = 'missed' THEN 1 END) AS missed
+        ")->first();
+
+            return response()->json([
+                'sales_reps_count' => $salesRepsCount,
+                'sales_managers_count' => $salesManagersCount,
+                'leads_count' => $totalLeads,
+                'follow_ups_count' => $totalFollowUps,
+                // 'leads_by_sales_reps' => $leadsBySalesReps,
+                'follow_ups' => $followUpSummary,
+            ]);
+        } else {
+            // General stats for other roles
+            $leadsCount = Lead::count();
+            $followUpsCount = FollowUp::count();
+            $followUps = FollowUp::selectRaw("
+            COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) AS completed,
+            COUNT(CASE WHEN status = 'missed' THEN 1 END) AS missed
+        ")->first();
+
+            return response()->json([
+                'leads_count' => $leadsCount,
+                'follow_ups_count' => $followUpsCount,
+                'follow_ups' => $followUps,
+            ]);
+        }
+    }
+
+    public function getPermissions()
+    {
+        $permissions = Permission::all();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permissions fetched successfully',
+            'data' => [
+                'permissions' => $permissions
+            ],
+        ], 200);
+    }
+
+   
+        /**
+         * Update the permissions for the specified role.
+         *
+         * @param Request $request
+         * @return \Illuminate\Http\JsonResponse
+         */
+    public function updateRolePermissions(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'role_id' => 'required|integer|exists:roles,id',
+                'permissions_to_add' => 'array',
+                'permissions_to_add.*' => 'integer|exists:permissions,id',
+                'permissions_to_remove' => 'array',
+                'permissions_to_remove.*' => 'integer|exists:permissions,id',
+            ]);
+
+            $role = Role::findOrFail($validated['role_id']);
+
+            // Initialize arrays to track actions
+            $addedPermissions = [];
+            $removedPermissions = [];
+
+            // Handle permissions to add
+            if (!empty($validated['permissions_to_add'])) {
+                $permissionsToAdd = Permission::whereIn('id', $validated['permissions_to_add'])->get();
+
+                foreach ($permissionsToAdd as $permission) {
+                    if (!$role->hasPermissionTo($permission)) {
+                        $role->givePermissionTo($permission);
+                        $addedPermissions[] = $permission->name;
+                    }
+                }
+            }
+
+            // Handle permissions to remove
+            if (!empty($validated['permissions_to_remove'])) {
+                $permissionsToRemove = Permission::whereIn('id', $validated['permissions_to_remove'])->get();
+
+                foreach ($permissionsToRemove as $permission) {
+                    if ($role->hasPermissionTo($permission)) {
+                        $role->revokePermissionTo($permission);
+                        $removedPermissions[] = $permission->name;
+                    }
+                }
+            }
+
+            return response()->json([
+                'message' => "Permissions successfully updated for role '{$role->name}'.",
+                'added_permissions' => $addedPermissions,
+                'removed_permissions' => $removedPermissions,
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Role or permission not found.',
+                'details' => $e->getMessage(),
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred while updating permissions.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 }

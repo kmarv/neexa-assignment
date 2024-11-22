@@ -15,7 +15,8 @@ class Lead extends Model
         'phone',
         'created_by',
         'updated_by',
-        'assigned_to'
+        'assigned_to',
+        'is_followup_scheduled'
     ];
 
     // Automatically fill the created_by and updated_by fields

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AssignRequest;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\AssignRequest;
 use App\Http\Requests\CreateLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 

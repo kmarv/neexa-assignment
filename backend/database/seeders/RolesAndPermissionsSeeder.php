@@ -34,13 +34,13 @@ class RolesAndPermissionsSeeder extends Seeder
             ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create Roles and Assign Permissions
-        $roleAdmin = Role::create(['name' => 'Admin']);
-        $roleSalesManager = Role::create(['name' => 'Sales Manager']);
-        $roleSalesRep = Role::create(['name' => 'Sales Rep']);
+        $roleAdmin = Role::firstOrCreate(['name' => 'Admin']);
+        $roleSalesManager = Role::firstOrCreate(['name' => 'Sales Manager']);
+        $roleSalesRep = Role::firstOrCreate(['name' => 'Sales Rep']);
 
         // Assign Permissions to Admin Role
         $roleAdmin->givePermissionTo([

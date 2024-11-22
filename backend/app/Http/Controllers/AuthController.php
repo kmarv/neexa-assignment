@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\RegisterUserRequest;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -100,7 +101,7 @@ class AuthController extends Controller
         try {
             // Attempt to authenticate the user
             if (! $token = auth()->attempt($credentials)) {
-                return response()->json(['error' => 'Inavlid email or Password'], 401);  // Unauthorized if credentials are incorrect
+                return response()->json(['error' => 'Invalid email or Password'], 401);  // Unauthorized if credentials are incorrect
             }
 
             // Return the token with user details
@@ -163,7 +164,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60, // seconds
-            'user' => $user,
+            'user' => $user
         ]);
     }
 
@@ -175,10 +176,12 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Roles fetched successfully',
             'data' => [
-                'roles' => $roles
+                'roles' => $roles->load('permissions')
             ],
         ], 200);
     }
+
+   
 
    
 }

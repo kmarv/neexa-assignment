@@ -44,6 +44,13 @@ class FollowUpController extends Controller
                 'status' => 'Pending',
             ]);
 
+            // Fetch the lead associated with the follow-up
+            $lead = Lead::findOrFail($followUp->lead_id);
+            // status update 
+            $lead->update([
+                'is_followup_scheduled' => true,
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Follow-up scheduled successfully.',

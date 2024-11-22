@@ -27,37 +27,29 @@ class MarkMissedFollowUps implements ShouldQueue
     /**
      * Execute the job.
      */
+
     public function handle(): void
     {
-       
-        // This updates the 'status' of all overdue follow-ups.
-        FollowUp::where('scheduled_at', '<', Carbon::now())
-            ->where('status', '!=', 'Missed')
-            ->where('status', '!=', 'Completed')
+        // Identify and update overdue follow-ups.
+        $updatedFollowUpIds = FollowUp::where('scheduled_at', '<', Carbon::now())
+            ->where('status', 'Pending')
+            ->pluck('id');
 
-            ->update(['status' => 'Missed']);
+        FollowUp::whereIn('id', $updatedFollowUpIds)->update(['status' => 'Missed']);
 
-        // Step 2: Fetch all follow-ups that were marked as 'Missed'.
-        // Make sure we are calling `get()` to retrieve the collection of `FollowUp` instances.
-        $overdueFollowUps = FollowUp::with('lead.userAssigned')
-            ->where('status', 'Missed')  // Get only those that are missed.
-            ->get();  // This executes the query and returns actual models.
+        $updatedFollowUps = FollowUp::with('lead', 'createdBy')->whereIn('id', $updatedFollowUpIds)->get();
+         Log::info($updatedFollowUpIds->toArray());
+         Log::info($updatedFollowUps->toArray());
 
-        // Loop through each `FollowUp` instance and send a notification.
-        foreach ($overdueFollowUps as $followUp) {
-            $assignedUser = $followUp->lead->userAssigned;
+        foreach ($updatedFollowUps as $followUp) {
+            $creator = $followUp->createdBy;
 
-            if ($assignedUser) {
-                try {
-                    // Send the correct notification (MissedFollowUpNotification)
-                    $assignedUser->notify(new MissedFollowUpNotification($followUp));
-                } catch (\Exception $e) {
-                    // Log any errors for debugging purposes
-                    Log::error("Failed to send notification for Follow-up ID {$followUp->id}: " . $e->getMessage());
-                }
+            Log::info($creator);
+
+            if ($creator) {
+                $creator->notify(new MissedFollowUpNotification($followUp));
             }
         }
-
-
     }
+
 }
